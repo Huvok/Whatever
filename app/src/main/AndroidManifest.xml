@@ -47,11 +47,9 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>
 
-        <activity
-            android:name=".TripMap"
-            android:label="@string/title_activity_trip_map">
-        </activity>
         <activity android:name=".DistanceSelector">
+        </activity>
+        <activity android:name=".TripMap">
         </activity>
     </application>
 
