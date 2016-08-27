@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import hd.whatever.Categories;
 import hd.whatever.DistanceSelector;
 import hd.whatever.R;
 

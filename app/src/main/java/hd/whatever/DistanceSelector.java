@@ -27,8 +27,8 @@ public class DistanceSelector extends AppCompatActivity implements SeekBar.OnSee
     //                                                      //METHODS
     @Override
     protected void onCreate(
-        Bundle savedInstanceState
-        )
+            Bundle savedInstanceState
+    )
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_distance_selector);
@@ -45,10 +45,10 @@ public class DistanceSelector extends AppCompatActivity implements SeekBar.OnSee
     //------------------------------------------------------------------------------------------------------------------
     @Override
     public void onProgressChanged(
-        SeekBar seekBar,
-        int intProgressValue,
-        boolean boolFromUser
-        )
+            SeekBar seekBar,
+            int intProgressValue,
+            boolean boolFromUser
+    )
     {
         intProgress = intProgressValue;
         textView.setText("Covered: " + seekBar.getProgress() + "/" + seekBar.getMax());
@@ -57,8 +57,8 @@ public class DistanceSelector extends AppCompatActivity implements SeekBar.OnSee
     //------------------------------------------------------------------------------------------------------------------
     @Override
     public void onStartTrackingTouch(
-        SeekBar seekBar
-        )
+            SeekBar seekBar
+    )
     {
 
     }
@@ -66,8 +66,8 @@ public class DistanceSelector extends AppCompatActivity implements SeekBar.OnSee
     //------------------------------------------------------------------------------------------------------------------
     @Override
     public void onStopTrackingTouch(
-        SeekBar seekBar
-        )
+            SeekBar seekBar
+    )
     {
 
     }
@@ -75,8 +75,8 @@ public class DistanceSelector extends AppCompatActivity implements SeekBar.OnSee
     //------------------------------------------------------------------------------------------------------------------
     @Override
     public void onClick(
-        View v
-        )
+            View v
+    )
     {
         Intent intentSubCategory = new Intent(DistanceSelector.this, TripMap.class);
         startActivity(intentSubCategory);
