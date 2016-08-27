@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Whatever</string>
+    <string name="title_activity_entertainment_subcategory">EntertainmentSubcategory</string>
+    <string name="title_activity_trip_map">Map</string>
+</resources>
