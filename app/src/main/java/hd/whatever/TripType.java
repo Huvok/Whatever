@@ -1,6 +1,7 @@
 package hd.whatever;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +14,8 @@ public class TripType extends AppCompatActivity implements View.OnClickListener
     //                                                      //PROPERTIES
     Button btnFullTrip;
     Button btnSingleTrip;
+
+    DatabaseHelper myDb;
 
     //------------------------------------------------------------------------------------------------------------------
     //                                                      //METHODS
@@ -29,6 +32,18 @@ public class TripType extends AppCompatActivity implements View.OnClickListener
 
         btnFullTrip.setOnClickListener(this);
         btnSingleTrip.setOnClickListener(this);
+
+        myDb = new DatabaseHelper(this);
+
+        subFillDataBase(myDb);
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private void subFillDataBase(
+        DatabaseHelper myDb
+        )
+    {
+        myDb.insertData("Food", "Children", "Chuck E. Cheese's", "25.7109356", "100.3426668");
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -52,4 +67,6 @@ public class TripType extends AppCompatActivity implements View.OnClickListener
             startActivity(intentCategories);
         }
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 }
