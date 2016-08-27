@@ -49,7 +49,9 @@
 
         <activity android:name=".DistanceSelector">
         </activity>
-        <activity android:name=".TripMap">
+        <activity
+            android:name=".TripMap"
+            android:label="@string/title_activity_trip_map">
         </activity>
     </application>
 
