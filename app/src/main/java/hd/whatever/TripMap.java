@@ -11,6 +11,8 @@ import android.os.*;
 import android.support.v4.app.*;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +36,8 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
     GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener,
     LocationListener,
-    GoogleMap.OnMapClickListener
+    GoogleMap.OnMapClickListener,
+    DirectionFinderListener
 {
     //------------------------------------------------------------------------------------------------------------------
     private GoogleMap mMap;
@@ -52,6 +55,8 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
     protected String latitude,longitude;
     protected boolean gps_enabled,network_enabled;
     LatLng currentLocation;
+    LatLng destinyLocation;
+    private Button btnFindPath;
 
     //------------------------------------------------------------------------------------------------------------------
     @Override
@@ -61,6 +66,19 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_map);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        btnFindPath = (Button) findViewById(R.id.btnFindPath);
+
+        btnFindPath.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendRequest();
+            }
+        });
 
         if (
             android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -74,8 +92,16 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
 
         //                                                  //Obtain the SupportMapFragment and get notified when the
         //                                                  //      map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+    }
+
+    private void sendRequest() {
+        try {
+            new DirectionFinder(this, currentLocation, destinyLocation).execute();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -107,7 +133,6 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
             mMap.setMyLocationEnabled(true);
         }
 
-
         //                                                  //Setting onclick event listener for the map
         mMap.setOnMapClickListener(this);
     }
@@ -122,6 +147,7 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
             mMap.clear();
         }
 
+        destinyLocation = point;
         // Adding new item to the ArrayList
         MarkerPoints.add(currentLocation);
 
@@ -484,6 +510,15 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
 
             // other 'case' lines to check for other permissions this app might request.
             // You can add here other case statements according to your requirement.
+        }
+    }
+
+    @Override
+    public void onDirectionFinderSuccess(List<Route> routes) {
+
+        for (Route route : routes) {
+            ((TextView) findViewById(R.id.tvDuration)).setText(route.duration.text);
+            ((TextView) findViewById(R.id.tvDistance)).setText(route.distance.text);
         }
     }
 }
