@@ -1,16 +1,17 @@
 package hd.whatever;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
+import android.os.*;
+import android.support.v4.app.*;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -18,33 +19,24 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.model.*;
 
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
+//======================================================================================================================
 public class TripMap extends FragmentActivity implements OnMapReadyCallback,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
-
+    GoogleApiClient.ConnectionCallbacks,
+    GoogleApiClient.OnConnectionFailedListener,
+    LocationListener,
+    GoogleMap.OnMapClickListener
+{
+    //------------------------------------------------------------------------------------------------------------------
     private GoogleMap mMap;
     ArrayList<LatLng> MarkerPoints;
     GoogleApiClient mGoogleApiClient;
@@ -52,107 +44,150 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
 
+    protected LocationManager locationManager;
+    protected android.location.LocationListener locationListener;
+    protected Context context;
+    String lat;
+    String provider;
+    protected String latitude,longitude;
+    protected boolean gps_enabled,network_enabled;
+    LatLng currentLocation;
+
+    //------------------------------------------------------------------------------------------------------------------
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(
+        Bundle savedInstanceState
+        )
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_map);
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (
+            android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            )
+        {
             checkLocationPermission();
         }
-        // Initializing
+
+        //                                                  //Initializing
         MarkerPoints = new ArrayList<>();
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        //                                                  //Obtain the SupportMapFragment and get notified when the
+        //                                                  //      map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    //------------------------------------------------------------------------------------------------------------------
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(
+        GoogleMap googleMap
+        )
+    {
         mMap = googleMap;
 
-        //Initialize Google Play Services
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
+        //                                                  //Initialize Google Play Services
+        if (
+            android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            )
+        {
+            if (
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
+                )
+            {
                 buildGoogleApiClient();
                 mMap.setMyLocationEnabled(true);
             }
+
         }
-        else {
+        else
+        {
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
         }
 
-        // Setting onclick event listener for the map
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
-            @Override
-            public void onMapClick(LatLng point) {
+        //                                                  //Setting onclick event listener for the map
+        mMap.setOnMapClickListener(this);
+    }
 
-                // Already two locations
-                if (MarkerPoints.size() > 1) {
-                    MarkerPoints.clear();
-                    mMap.clear();
-                }
+    //------------------------------------------------------------------------------------------------------------------
+    @Override
+    public void onMapClick(LatLng point) {
 
-                // Adding new item to the ArrayList
-                MarkerPoints.add(point);
+        // Already two locations
+        if (MarkerPoints.size() > 1) {
+            MarkerPoints.clear();
+            mMap.clear();
+        }
 
-                // Creating MarkerOptions
-                MarkerOptions options = new MarkerOptions();
+        // Adding new item to the ArrayList
+        MarkerPoints.add(currentLocation);
 
-                // Setting the position of the marker
-                options.position(point);
+        // Creating MarkerOptions
+        MarkerOptions options = new MarkerOptions();
 
-                /**
-                 * For the start location, the color of marker is GREEN and
-                 * for the end location, the color of marker is RED.
-                 */
-                if (MarkerPoints.size() == 1) {
-                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                } else if (MarkerPoints.size() == 2) {
-                    options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                }
+        // Setting the position of the marker
+        options.position(currentLocation);
+
+        /**
+         * For the start location, the color of marker is GREEN and
+         * for the end location, the color of marker is RED.
+         */
+        if (MarkerPoints.size() == 1) {
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        } else if (MarkerPoints.size() == 2) {
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        }
 
 
-                // Add new marker to the Google Map Android API V2
-                mMap.addMarker(options);
+        // Add new marker to the Google Map Android API V2
+        mMap.addMarker(options);
 
-                // Checks, whether start and end locations are captured
-                if (MarkerPoints.size() >= 2) {
-                    LatLng origin = MarkerPoints.get(0);
-                    LatLng dest = MarkerPoints.get(1);
+        // Adding new item to the ArrayList
+        MarkerPoints.add(point);
 
-                    // Getting URL to the Google Directions API
-                    String url = getUrl(origin, dest);
-                    Log.d("onMapClick", url.toString());
-                    FetchUrl FetchUrl = new FetchUrl();
+        // Creating MarkerOptions
+        options = new MarkerOptions();
 
-                    // Start downloading json data from Google Directions API
-                    FetchUrl.execute(url);
-                    //move map camera
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(origin));
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
-                }
+        // Setting the position of the marker
+        options.position(point);
 
-            }
-        });
+        /**
+         * For the start location, the color of marker is GREEN and
+         * for the end location, the color of marker is RED.
+         */
+        if (MarkerPoints.size() == 1) {
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        } else if (MarkerPoints.size() == 2) {
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        }
+
+
+        // Add new marker to the Google Map Android API V2
+        mMap.addMarker(options);
+
+        // Checks, whether start and end locations are captured
+        if (MarkerPoints.size() >= 2) {
+            LatLng origin = MarkerPoints.get(0);
+            LatLng dest = MarkerPoints.get(1);
+
+            // Getting URL to the Google Directions API
+            String url = getUrl(origin, dest);
+            Log.d("onMapClick", url.toString());
+            FetchUrl FetchUrl = new FetchUrl();
+
+            // Start downloading json data from Google Directions API
+            FetchUrl.execute(url);
+            //move map camera
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(origin));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(13));
+        }
 
     }
 
+    //------------------------------------------------------------------------------------------------------------------
     private String getUrl(LatLng origin, LatLng dest) {
 
         // Origin of route
@@ -378,6 +413,7 @@ public class TripMap extends FragmentActivity implements OnMapReadyCallback,
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
 
+        currentLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
     }
 
     @Override
